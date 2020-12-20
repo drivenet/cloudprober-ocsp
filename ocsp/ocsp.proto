@@ -1,0 +1,29 @@
+// This protobuf defines a new cloudprober probe type.
+syntax = "proto2";
+
+package ocsp;
+
+
+import "github.com/google/cloudprober/probes/proto/config.proto";
+
+message ProbeConf {
+  // Main domain certificate update interval
+  optional int32 certificate_refresh_interval = 1 [default = 60000];
+
+  // Proxy URL, e.g. http://myproxy:3128
+  optional string proxy_url = 2;
+
+  // Interval between targets.
+  optional int32 interval_between_targets_msec = 98 [default = 10];
+
+  // Requests per probe.
+  // Number of OCSP requests per probe. Requests are executed concurrently and
+  // each OCSP request contributes to probe results. For example, if you run two
+  // requests per probe, "total" counter will be incremented by 2.
+  optional int32 requests_per_probe = 99 [default = 1];
+
+}
+
+extend cloudprober.probes.ProbeDef {
+  optional ProbeConf ocsp_probe = 200;
+}
