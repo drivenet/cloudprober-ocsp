@@ -84,23 +84,7 @@ type callResult struct {
 // DefaultTargetsUpdateInterval defines default frequency for target updates.
 // Actual targets update interval is:
 // max(DefaultTargetsUpdateInterval, probe_interval)
-var DefaultTargetsUpdateInterval = 10 * time.Second
-
-// maxGapBetweenTargets defines the maximum gap between probe loops for each
-// target. Actual gap is either configured or determined by the probe interval
-// and number of targets.
-const maxGapBetweenTargets = 1 * time.Second
-
-const (
-	maxResponseSizeForMetrics = 128
-	targetsUpdateInterval     = 1 * time.Minute
-	largeBodyThreshold        = bytes.MinRead // 512.
-)
-
-// resolveFunc resolves the given host for the IP version.
-// This type is mainly used for testing. For all other cases, a nil function
-// should be passed to the httpRequestForTarget function.
-type resolveFunc func(host string, ipVer int) (net.IP, error)
+var DefaultTargetsUpdateInterval = 3600 * time.Second
 
 // Init initializes the probe with the given params.
 func (p *Probe) Init(name string, opts *options.Options) error {
@@ -140,11 +124,11 @@ func (p *Probe) Init(name string, opts *options.Options) error {
 	}
 
 	if p.c.GetProxyUrl() != "" {
-		url, err := url.Parse(p.c.GetProxyUrl())
+		proxyUrl, err := url.Parse(p.c.GetProxyUrl())
 		if err != nil {
 			return fmt.Errorf("error parsing proxy URL (%s): %v", p.c.GetProxyUrl(), err)
 		}
-		transport.Proxy = http.ProxyURL(url)
+		transport.Proxy = http.ProxyURL(proxyUrl)
 	}
 
 	// Thread-safe
@@ -286,62 +270,42 @@ func (p *Probe) runProbe(ctx context.Context, target endpoint.Endpoint, requests
 		return
 	}
 
-	if p.c.GetRequestsPerProbe() == 1 {
-		//p.oc(req.WithContext(reqCtx), target.Name, result, nil)
+	for server, req := range requests {
+		var (
+			ok     bool
+			result *probeResult
+		)
 
-		for server, req := range requests {
-			var (
-				ok     bool
-				result *probeResult
-			)
+		ctx, cancel := context.WithTimeout(ctx, p.opts.Timeout)
+		res, err := ocspProbe(p.client, req.WithContext(ctx), issuer)
+		cancel()
 
-			ctx, cancel := context.WithTimeout(ctx, p.opts.Timeout)
-			res, err := ocspProbe(p.client, req.WithContext(ctx), issuer)
-			cancel()
-
-			if result, ok = results[server]; !ok {
-				results[server] = p.newResult()
-				result = results[server]
-			}
-
-			result.total++
-
-			if err != nil {
-				if isClientTimeout(err) {
-					p.l.Warning("Target:", target.Name, ", URL:", req.URL.String(), ", http.doHTTPRequest: timeout error: ", err.Error())
-					result.timeouts++
-					return
-				}
-				p.l.Warning("Target:", target.Name, ", URL:", req.URL.String(), ", http.doHTTPRequest: ", err.Error())
-				return
-			}
-
-			result.success++
-
-			result.respCodes.IncKey(strconv.FormatInt(int64(res.HTTPStatusCode), 10))
-			result.ocspCodes.IncKey(strconv.FormatInt(int64(res.OCSPStatusCode), 10))
-			result.latency.AddFloat64(res.spent.Seconds() / p.opts.LatencyUnit.Seconds())
-
+		if result, ok = results[server]; !ok {
+			results[server] = p.newResult()
+			result = results[server]
 		}
 
-		return
+		result.total++
+
+		if err != nil {
+			if isClientTimeout(err) {
+				p.l.Warning("Target:", target.Name, ", URL:", req.URL.String(), ", http.doHTTPRequest: timeout error: ", err.Error())
+				result.timeouts++
+				return
+			}
+			p.l.Warning("Target:", target.Name, ", URL:", req.URL.String(), ", http.doHTTPRequest: ", err.Error())
+			return
+		}
+
+		result.success++
+
+		result.respCodes.IncKey(strconv.FormatInt(int64(res.HTTPStatusCode), 10))
+		result.ocspCodes.IncKey(strconv.FormatInt(int64(res.OCSPStatusCode), 10))
+		result.latency.AddFloat64(res.spent.Seconds() / p.opts.LatencyUnit.Seconds())
+
 	}
 
-	// For multiple requests per probe, we launch a separate goroutine for each
-	// HTTP request. We use a mutex to protect access to per-target result object
-	// in doHTTPRequest. Note that result object is not accessed concurrently
-	// anywhere else -- export of metrics happens when probe is not running.
-	//var resultMu sync.Mutex
-	//
-	//wg := sync.WaitGroup{}
-	//for numReq := int32(0); numReq < p.c.GetRequestsPerProbe(); numReq++ {
-	//	wg.Add(1)
-	//	go func(req *http.Request, targetName string, result *probeResult) {
-	//		defer wg.Done()
-	//		p.doHTTPRequest(req.WithContext(reqCtx), targetName, result, &resultMu)
-	//	}(req, target.Name, result)
-	//}
-	//wg.Wait()
+	return
 }
 
 func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, dataChan chan *metrics.EventMetrics) {
@@ -500,72 +464,6 @@ func ocspProbe(cli *http.Client, req *http.Request, issuer *x509.Certificate) (*
 	return call, nil
 }
 
-//
-//func (p *Probe)  ocspProbe(server string, issuer *x509.Certificate, request []byte) (string, error) {
-//	var payload []string
-//
-//	httpRequest, err := http.NewRequest(http.MethodPost, server, bytes.NewBuffer(request))
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	ocspUrl, err := url.Parse(server)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	httpRequest.Header.Add("Content-Type", "application/ocsp-request")
-//	httpRequest.Header.Add("Accept", "application/ocsp-response")
-//	httpRequest.Header.Add("host", ocspUrl.Host)
-//	httpClient := &http.Client{}
-//	httpResponse, err := httpClient.Do(httpRequest)
-//	if err != nil {
-//		return "", err
-//	}
-//	defer httpResponse.Body.Close()
-//	output, err := ioutil.ReadAll(httpResponse.Body)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	ocspResponse, err := ocsp.ParseResponse(output, issuer)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	payload = append(payload, fmt.Sprintf("ocsp_status %d", ocspResponse.Status))
-//
-//	return strings.Join(payload, "\n"), nil
-//}
-
-//
-//// runProbe runs probe for all targets and update EventMetrics.
-//func (p *Probe) runProbe(ctx context.Context) {
-//	p.targets = endpoint.NamesFromEndpoints(p.opts.Targets.ListEndpoints())
-//
-//	var wg sync.WaitGroup
-//	for _, target := range p.targets {
-//		wg.Add(1)
-//
-//		go func(target string, em *metrics.EventMetrics) {
-//			defer wg.Done()
-//			em.Metric("total").AddInt64(1)
-//			start := time.Now()
-//			err := p.runProbeForTarget(ctx, target) // run probe just for a single target
-//			if err != nil {
-//				p.l.Errorf(err.Error())
-//				return
-//			}
-//			em.Metric("success").AddInt64(1)
-//			em.Metric("latency").AddFloat64(time.Now().Sub(start).Seconds() / p.opts.LatencyUnit.Seconds())
-//		}(target, p.res[target])
-//
-//	}
-//
-//	wg.Wait()
-//}
-//
-
 func (p *Probe) updateCertificates() {
 	p.Lock()
 	defer p.Unlock()
@@ -620,7 +518,7 @@ func (p *Probe) downloadServerCertificate(server string) (*x509.Certificate, err
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	certs := conn.ConnectionState().PeerCertificates
 	if len(certs) < 0 {
@@ -640,7 +538,7 @@ func fetchRemote(url string) (*x509.Certificate, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	p, _ := pem.Decode(in)
 	if p != nil {
