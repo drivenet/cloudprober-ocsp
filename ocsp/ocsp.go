@@ -36,7 +36,6 @@ type Probe struct {
 
 	opts *options.Options
 
-	//res map[string]*metrics.EventMetrics // Results by target
 	l *logger.Logger
 
 	client *http.Client
@@ -84,7 +83,7 @@ type callResult struct {
 // DefaultTargetsUpdateInterval defines default frequency for target updates.
 // Actual targets update interval is:
 // max(DefaultTargetsUpdateInterval, probe_interval)
-var DefaultTargetsUpdateInterval = 3600 * time.Second
+var DefaultTargetsUpdateInterval = 1 * time.Minute
 
 // Init initializes the probe with the given params.
 func (p *Probe) Init(name string, opts *options.Options) error {
