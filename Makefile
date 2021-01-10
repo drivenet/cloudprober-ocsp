@@ -15,14 +15,15 @@ docker_build: deps protoc Dockerfile
 		-t $(DOCKER_IMAGE)  .
 
 docker_push:
-	docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
+	docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}" ${DOCKER_REGISTRY}
 	docker push $(DOCKER_IMAGE):latest
 
 docker_push_tagged:
 	docker tag $(DOCKER_IMAGE) $(DOCKER_IMAGE):$(DOCKER_VERSION)
-	docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
+	docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}" ${DOCKER_REGISTRY}
 	docker push $(DOCKER_IMAGE):$(DOCKER_VERSION)
 
+docker_release: docker_build docker_push
 
 # Dependencies
 deps:

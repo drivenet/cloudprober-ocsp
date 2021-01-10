@@ -13,6 +13,7 @@ import (
 	"github.com/google/cloudprober/metrics"
 	"github.com/google/cloudprober/probes/options"
 	"github.com/google/cloudprober/targets/endpoint"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ocsp"
 	"io/ioutil"
 	"math/rand"
@@ -101,7 +102,6 @@ func (p *Probe) Init(name string, opts *options.Options) error {
 
 	p.c = c
 
-	//p.res = make(map[string]*metrics.EventMetrics)
 	p.certs = make(map[string]*x509.Certificate)
 	p.issuers = make(map[string]*x509.Certificate)
 
@@ -410,7 +410,7 @@ func (p *Probe) ocspRequestForTarget(target endpoint.Endpoint) (map[string]*http
 			continue
 		}
 
-		requests[serverUrl.Host], err = http.NewRequest(http.MethodPost, cert.OCSPServer[i], bytes.NewBuffer(body))
+		requests[serverUrl.Host], err = http.NewRequest(http.MethodPost, cert.OCSPServer[i], ioutil.NopCloser(bytes.NewBuffer(body)))
 		if err != nil {
 			return nil, err
 		}
@@ -423,7 +423,6 @@ func (p *Probe) ocspRequestForTarget(target endpoint.Endpoint) (map[string]*http
 	return requests, nil
 }
 
-// замени interface чем-то полезным
 func ocspProbe(cli *http.Client, req *http.Request, issuer *x509.Certificate) (*callResult, error) {
 	var (
 		call = &callResult{
@@ -437,7 +436,7 @@ func ocspProbe(cli *http.Client, req *http.Request, issuer *x509.Certificate) (*
 	call.spent = time.Since(start)
 
 	if err != nil {
-		return call, err
+		return call, errors.Wrap(err, "http.Client.Do()")
 	}
 
 	call.HTTPStatusCode = res.StatusCode

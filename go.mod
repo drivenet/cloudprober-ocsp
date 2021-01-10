@@ -13,6 +13,7 @@ require (
 	github.com/google/cloudprober v0.11.2-0.20201218214659-8a596e67f91b
 	github.com/lib/pq v1.9.0 // indirect
 	github.com/miekg/dns v1.1.35 // indirect
+	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924 // indirect
 	golang.org/x/sys v0.0.0-20201214210602-f9fddec55a1e // indirect
