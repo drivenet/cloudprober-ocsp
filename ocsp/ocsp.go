@@ -292,7 +292,7 @@ func (p *Probe) runProbe(ctx context.Context, target endpoint.Endpoint, requests
 				result.timeouts++
 				return
 			}
-			p.l.Warning("Target:", target.Name, ", URL:", req.URL.String(), ", http.doHTTPRequest: ", err.Error())
+			p.l.Warning("1 Target:", target.Name, ", URL:", req.URL.String(), ", http.doHTTPRequest: ", err.Error())
 			return
 		}
 
@@ -317,13 +317,7 @@ func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, da
 		al.UpdateForTarget(target.Name, target.Labels)
 	}
 
-	requests, err := p.ocspRequestForTarget(target)
-	if err != nil {
-		p.l.Errorf("cannot create OCSP requests for target %s: %s", target.Name, err.Error())
-		return
-	}
-
-	results := make(map[string]*probeResult, len(requests))
+	results := make(map[string]*probeResult, 0)
 
 	ticker := time.NewTicker(p.opts.Interval)
 	defer ticker.Stop()
@@ -331,6 +325,12 @@ func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, da
 	for ts := range ticker.C {
 		// Don't run another probe if context is canceled already.
 		if ctxDone(ctx) {
+			return
+		}
+
+		requests, err := p.ocspRequestForTarget(target)
+		if err != nil {
+			p.l.Errorf("cannot create OCSP requests for target %s: %s", target.Name, err.Error())
 			return
 		}
 
@@ -410,7 +410,7 @@ func (p *Probe) ocspRequestForTarget(target endpoint.Endpoint) (map[string]*http
 			continue
 		}
 
-		requests[serverUrl.Host], err = http.NewRequest(http.MethodPost, cert.OCSPServer[i], ioutil.NopCloser(bytes.NewBuffer(body)))
+		requests[serverUrl.Host], err = http.NewRequest(http.MethodPost, cert.OCSPServer[i], bytes.NewBuffer(body))
 		if err != nil {
 			return nil, err
 		}
@@ -438,6 +438,12 @@ func ocspProbe(cli *http.Client, req *http.Request, issuer *x509.Certificate) (*
 	if err != nil {
 		return call, errors.Wrap(err, "http.Client.Do()")
 	}
+
+	defer func() {
+		if res.Body != nil {
+			_ = res.Body.Close()
+		}
+	}()
 
 	call.HTTPStatusCode = res.StatusCode
 
