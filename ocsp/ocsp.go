@@ -8,13 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/cloudflare/cfssl/helpers"
-	"github.com/google/cloudprober/logger"
-	"github.com/google/cloudprober/metrics"
-	"github.com/google/cloudprober/probes/options"
-	"github.com/google/cloudprober/targets/endpoint"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/ocsp"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -24,6 +17,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cloudflare/cfssl/helpers"
+	"github.com/google/cloudprober/logger"
+	"github.com/google/cloudprober/metrics"
+	"github.com/google/cloudprober/probes/options"
+	"github.com/google/cloudprober/targets/endpoint"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ocsp"
 )
 
 const (
@@ -314,7 +315,7 @@ func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, da
 	var runCnt int64
 
 	for _, al := range p.opts.AdditionalLabels {
-		al.UpdateForTarget(target.Name, target.Labels)
+		al.UpdateForTarget(target)
 	}
 
 	results := make(map[string]*probeResult, 0)

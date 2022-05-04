@@ -1,4 +1,4 @@
-FROM golang:1 as builder
+FROM golang:1.18 as builder
 
 ENV GOGC off
 ENV CGO_ENABLED 0
@@ -11,6 +11,8 @@ WORKDIR /src
 COPY . /src
 
 RUN set -x \
+    && go mod tidy \
+    && go mod vendor \
     && go build -v -mod=vendor -trimpath \
       -o /go/bin/driveprober ./cmd \
     && upx -3 /go/bin/driveprober

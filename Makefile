@@ -1,7 +1,7 @@
 VERSION ?= $(shell git describe --tags)
 DOCKER_VERSION ?= $(VERSION)
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
-DOCKER_PREFIX = "docker.pkg.github.com/drivenet/cloudprober-ocsp"
+DOCKER_PREFIX ?= "ghcr.io/drivenet/cloudprober-ocsp"
 DOCKER_IMAGE ?= $(DOCKER_PREFIX)/cloudprober
 
 test:
