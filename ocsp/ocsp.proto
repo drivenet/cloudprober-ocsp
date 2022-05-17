@@ -4,7 +4,7 @@ syntax = "proto2";
 package ocsp;
 
 
-import "github.com/google/cloudprober/probes/proto/config.proto";
+import "github.com/cloudprober/cloudprober/probes/proto/config.proto";
 
 message ProbeConf {
   // Main domain certificate update interval

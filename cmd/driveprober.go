@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/drivenet/cloudprober-ocsp/ocsp"
 	"io/ioutil"
 	"os"
 
+	"github.com/drivenet/cloudprober-ocsp/ocsp"
+
 	"cloud.google.com/go/compute/metadata"
+	"github.com/cloudprober/cloudprober"
+	"github.com/cloudprober/cloudprober/config"
+	"github.com/cloudprober/cloudprober/probes"
+	"github.com/cloudprober/cloudprober/web"
 	"github.com/golang/glog"
-	"github.com/google/cloudprober"
-	"github.com/google/cloudprober/config"
-	"github.com/google/cloudprober/probes"
-	"github.com/google/cloudprober/web"
 )
 
 var (
