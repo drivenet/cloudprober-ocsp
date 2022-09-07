@@ -18,7 +18,7 @@ RUN set -x \
     && upx -3 /go/bin/driveprober
 
 # Executable image
-FROM scratch
+FROM ubuntu
 
 WORKDIR /
 

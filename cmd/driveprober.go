@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"flag"
-	"io/ioutil"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/drivenet/cloudprober-ocsp/ocsp"
 
@@ -26,7 +27,7 @@ const (
 )
 
 func configFileToString(fileName string) string {
-	b, err := ioutil.ReadFile(fileName)
+	b, err := os.ReadFile(fileName)
 	if err != nil {
 		glog.Exitf("Failed to read the config file: %v", err)
 	}
@@ -40,10 +41,10 @@ func getConfig() string {
 	// On GCE first check if there is a config in custom metadata
 	// attributes.
 	if metadata.OnGCE() {
-		if config, err := config.ReadFromGCEMetadata(configMetadataKeyName); err != nil {
+		if cfg, err := config.ReadFromGCEMetadata(configMetadataKeyName); err != nil {
 			glog.Infof("Error reading config from metadata. Err: %v", err)
 		} else {
-			return config
+			return cfg
 		}
 	}
 	// If config not found in metadata, check default config on disk
@@ -54,8 +55,20 @@ func getConfig() string {
 	return config.DefaultConfig()
 }
 
+func catchSignal(sig chan os.Signal) {
+	select {
+	case s := <-sig:
+		glog.Infof("catch signal: %s", s.String())
+		os.Exit(0)
+	}
+}
+
 func main() {
 	flag.Parse()
+	sig := make(chan os.Signal, 10)
+
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGQUIT, syscall.SIGTERM)
+	go catchSignal(sig)
 
 	// Register stubby probe type
 	probes.RegisterProbeType(
