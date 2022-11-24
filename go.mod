@@ -3,7 +3,6 @@ module github.com/drivenet/cloudprober-ocsp
 go 1.19
 
 require (
-	cloud.google.com/go/compute v1.12.1
 	cloud.google.com/go/compute/metadata v0.2.1
 	github.com/cloudflare/cfssl v1.6.3
 	github.com/cloudprober/cloudprober v0.12.1
@@ -15,11 +14,11 @@ require (
 
 require (
 	cloud.google.com/go v0.107.0 // indirect
+	cloud.google.com/go/compute v1.12.1 // indirect
 	cloud.google.com/go/iam v0.7.0 // indirect
 	cloud.google.com/go/logging v1.5.0 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
 	cloud.google.com/go/pubsub v1.26.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.145 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.3 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.3 // indirect
@@ -51,7 +50,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
-	github.com/stretchr/testify v1.8.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
