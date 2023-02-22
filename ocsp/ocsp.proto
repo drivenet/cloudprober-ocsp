@@ -3,8 +3,9 @@ syntax = "proto2";
 
 package ocsp;
 
-
 import "github.com/cloudprober/cloudprober/probes/proto/config.proto";
+
+option go_package = "github.com/drivenet/cloudprober-ocsp";
 
 message ProbeConf {
   // Main domain certificate update interval
