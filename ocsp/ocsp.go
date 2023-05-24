@@ -315,7 +315,7 @@ func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, da
 	var runCnt int64
 
 	for _, al := range p.opts.AdditionalLabels {
-		al.UpdateForTarget(target)
+		al.UpdateForTarget(target, target.IP.String(), target.Port)
 	}
 
 	results := make(map[string]*probeResult, 0)
@@ -354,7 +354,7 @@ func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, da
 					AddLabel("dst", target.Name)
 				em.LatencyUnit = p.opts.LatencyUnit
 				for _, al := range p.opts.AdditionalLabels {
-					em.AddLabel(al.KeyValueForTarget(target.Name))
+					em.AddLabel(al.KeyValueForTarget(target))
 				}
 				p.opts.LogMetrics(em)
 				dataChan <- em

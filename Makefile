@@ -32,7 +32,7 @@ deps:
 
 protoc: LIBS:=""
 protoc:
-	@find . -type f -name '*.proto' -not -path './vendor/*' \
+	find . -type f -name '*.proto' -not -path './vendor/*' \
 		-exec protoc \
 		--proto_path=$(GOPATH)/src:./vendor:. \
-		--go_out=plugins=$(LIBS):. '{}' \;
+			--go_out=plugins=$(LIBS):. '{}' \;
