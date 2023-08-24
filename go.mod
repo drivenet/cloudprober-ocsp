@@ -5,7 +5,7 @@ go 1.20
 require (
 	cloud.google.com/go/compute/metadata v0.2.3
 	github.com/cloudflare/cfssl v1.6.4
-	github.com/cloudprober/cloudprober v0.12.7
+	github.com/cloudprober/cloudprober v0.12.8
 	github.com/golang/glog v1.1.1
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.11.0
