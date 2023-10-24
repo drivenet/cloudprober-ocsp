@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net"
 	"net/http"
@@ -24,6 +24,7 @@ import (
 	"github.com/cloudprober/cloudprober/probes/options"
 	"github.com/cloudprober/cloudprober/targets/endpoint"
 	"github.com/pkg/errors"
+
 	"golang.org/x/crypto/ocsp"
 )
 
@@ -70,9 +71,9 @@ type Probe struct {
 type probeResult struct {
 	total, success, timeouts int64
 	connEvent                int64
-	latency                  metrics.Value
-	respCodes                *metrics.Map
-	ocspCodes                *metrics.Map
+	latency                  metrics.LatencyValue
+	respCodes                *metrics.Map[int64]
+	ocspCodes                *metrics.Map[int64]
 }
 
 type callResult struct {
@@ -251,16 +252,16 @@ func (p *Probe) updateTargetsAndStartProbes(ctx context.Context, dataChan chan *
 }
 
 func (p *Probe) newResult() *probeResult {
-	var latencyValue metrics.Value
+	var latencyValue metrics.LatencyValue
 	if p.opts.LatencyDist != nil {
-		latencyValue = p.opts.LatencyDist.Clone()
+		latencyValue = p.opts.LatencyDist.CloneDist()
 	} else {
 		latencyValue = metrics.NewFloat(0)
 	}
 	return &probeResult{
 		latency:   latencyValue,
-		respCodes: metrics.NewMap("code", metrics.NewInt(0)),
-		ocspCodes: metrics.NewMap("ocsp", metrics.NewInt(0)),
+		respCodes: metrics.NewMap("code"),
+		ocspCodes: metrics.NewMap("ocsp"),
 	}
 }
 
@@ -318,7 +319,7 @@ func (p *Probe) startForTarget(ctx context.Context, target endpoint.Endpoint, da
 		al.UpdateForTarget(target, target.IP.String(), target.Port)
 	}
 
-	results := make(map[string]*probeResult, 0)
+	results := make(map[string]*probeResult)
 
 	ticker := time.NewTicker(p.opts.Interval)
 	defer ticker.Stop()
@@ -454,7 +455,7 @@ func ocspProbe(cli *http.Client, req *http.Request, issuer *x509.Certificate) (*
 			res.Status)
 	}
 
-	output, err := ioutil.ReadAll(res.Body)
+	output, err := io.ReadAll(res.Body)
 	if err != nil {
 		return call, err
 	}
@@ -539,7 +540,7 @@ func fetchRemote(url string) (*x509.Certificate, error) {
 		return nil, err
 	}
 
-	in, err := ioutil.ReadAll(resp.Body)
+	in, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -557,7 +558,8 @@ func fetchRemote(url string) (*x509.Certificate, error) {
 //
 // Use for errors returned from http.Client methods (Get, Post).
 func isClientTimeout(err error) bool {
-	if uerr, ok := err.(*url.Error); ok {
+	var uerr *url.Error
+	if errors.As(err, &uerr) {
 		if nerr, ok := uerr.Err.(net.Error); ok && nerr.Timeout() {
 			return true
 		}
