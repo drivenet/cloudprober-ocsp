@@ -23,7 +23,7 @@ docker_push_tagged:
 	docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}" ${DOCKER_REGISTRY}
 	docker push $(DOCKER_IMAGE):$(DOCKER_VERSION)
 
-docker_release: docker_build docker_push
+docker_release: docker_build docker_build_tagged docker_push
 
 # Dependencies
 deps:
