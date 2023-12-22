@@ -20,10 +20,15 @@ RUN set -x \
 # Executable image
 FROM ubuntu
 
+RUN useradd -r -s /usr/sbin/nologin -u 2034 cloudprober
+
 WORKDIR /
 
 COPY --from=builder /go/bin/driveprober /bin/driveprober
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+RUN chown cloudprober /bin/driveprober
+USER cloudprober
 
 # Metadata params
 ARG BUILD_DATE
