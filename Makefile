@@ -8,7 +8,7 @@ test:
 	go test -v -race -covermode=atomic ./...
 
 docker_build: deps protoc Dockerfile
-	docker build \
+	docker buildx build \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg VCS_REF=$(GIT_COMMIT) \
