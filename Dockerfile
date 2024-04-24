@@ -1,4 +1,4 @@
-FROM golang:1.21-bullseye as builder
+FROM golang:1.22-bullseye as builder
 
 ENV GOGC off
 ENV CGO_ENABLED 0
