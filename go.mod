@@ -1,12 +1,10 @@
 module github.com/drivenet/cloudprober-ocsp
 
-go 1.23.0
-
-toolchain go1.23.3
+go 1.23.3
 
 require (
 	github.com/cloudflare/cfssl v1.6.5
-	github.com/cloudprober/cloudprober v0.13.9-0.20241211211106-4727269b44e8
+	github.com/cloudprober/cloudprober v0.13.9-0.20250113091230-6b2a25c368f4
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.31.0
@@ -97,7 +95,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
