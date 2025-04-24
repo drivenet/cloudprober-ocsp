@@ -16,7 +16,7 @@ import (
 	"github.com/cloudprober/cloudprober/config"
 	"github.com/cloudprober/cloudprober/logger"
 	"github.com/cloudprober/cloudprober/probes"
-
+	"github.com/cloudprober/cloudprober/state"
 
 	"github.com/drivenet/cloudprober-ocsp/ocsp"
 )
