@@ -14,9 +14,9 @@ import (
 
 	"github.com/cloudprober/cloudprober"
 	"github.com/cloudprober/cloudprober/config"
-	"github.com/cloudprober/cloudprober/config/runconfig"
 	"github.com/cloudprober/cloudprober/logger"
 	"github.com/cloudprober/cloudprober/probes"
+
 
 	"github.com/drivenet/cloudprober-ocsp/ocsp"
 )
@@ -91,23 +91,23 @@ func main() {
 		version += " (dirty)"
 	}
 
-	runconfig.SetVersion(version)
+	state.SetVersion(version)
 	if buildTimestamp != "" {
 		ts, err := strconv.ParseInt(buildTimestamp, 10, 64)
 		if err != nil {
 			l.Criticalf("Error parsing build timestamp (%s). Err: %v", buildTimestamp, err)
 		}
-		runconfig.SetBuildTimestamp(time.Unix(ts, 0))
+		state.SetBuildTimestamp(time.Unix(ts, 0))
 	}
 
 	if *versionFlag {
-		fmt.Println(runconfig.Version())
+		fmt.Println(state.Version())
 		return
 	}
 
 	if *buildInfoFlag {
-		fmt.Println(runconfig.Version())
-		fmt.Println("Built at: ", runconfig.BuildTimestamp())
+		fmt.Println(state.Version())
+		fmt.Println("Built at: ", state.BuildTimestamp())
 		return
 	}
 
@@ -140,9 +140,9 @@ func main() {
 	}
 
 	// web.Init sets up web UI for cloudprober.
-	//if err := web.Init(); err != nil {
+	// if err := web.Init(); err != nil {
 	//	l.Criticalf("Error initializing web interface. Err: %v", err)
-	//}
+	// }
 
 	startCtx := context.Background()
 
