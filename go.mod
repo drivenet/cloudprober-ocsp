@@ -1,10 +1,12 @@
 module github.com/drivenet/cloudprober-ocsp
 
-go 1.24
+go 1.24.6
+
+toolchain go1.24.7
 
 require (
 	github.com/cloudflare/cfssl v1.6.5
-	github.com/cloudprober/cloudprober v0.14.0
+	github.com/cloudprober/cloudprober v0.14.1
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.40.0
 	google.golang.org/protobuf v1.36.6
