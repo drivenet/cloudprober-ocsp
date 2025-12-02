@@ -1,11 +1,17 @@
-FROM golang:1.24-bullseye as builder
+FROM golang:1.25-bookworm as builder
 
 ENV GOGC off
 ENV CGO_ENABLED 0
 
 RUN set -x \
-    && apt update \
-    && apt install -y upx-ucl
+  && apt update \
+  && DEBIAN_FRONTEND="noninteractive" apt install -y wget ca-certificates make ruby-dev build-essential
+
+RUN  cd /tmp \
+  && wget https://github.com/upx/upx/releases/download/v5.0.2/upx-5.0.2-amd64_linux.tar.xz \
+  && tar -xf upx-5.0.2-amd64_linux.tar.xz
+RUN cp /tmp/upx-5.0.2-amd64_linux/upx /sbin \
+    && chmod +x /sbin/upx
 
 WORKDIR /src
 COPY . /src
