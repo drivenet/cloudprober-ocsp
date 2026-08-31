@@ -24,14 +24,13 @@ RUN set -x \
     && upx -3 /go/bin/driveprober
 
 # Executable image
-FROM ubuntu
+FROM alpine
 
-RUN useradd -r -s /usr/sbin/nologin -u 2034 cloudprober
+RUN adduser -D -H -s /sbin/nologin -u 2034 cloudprober
 
 WORKDIR /
 
 COPY --from=builder /go/bin/driveprober /bin/driveprober
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 RUN chown cloudprober /bin/driveprober
 USER cloudprober
@@ -49,4 +48,4 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.version=$VERSION \
       com.microscaling.license="Apache-2.0"
 
-ENTRYPOINT ["/bin/driveprober", "--logtostderr"]
+ENTRYPOINT ["/bin/driveprober"]

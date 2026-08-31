@@ -3,9 +3,13 @@ DOCKER_VERSION ?= $(VERSION)
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
 DOCKER_PREFIX ?= "ghcr.io/drivenet/cloudprober-ocsp"
 DOCKER_IMAGE ?= $(DOCKER_PREFIX)/cloudprober
+BINARY ?= driveprober
 
 test:
 	go test -v -race -covermode=atomic ./...
+
+$(BINARY):
+	CGO_ENABLED=0 go build -o $(BINARY) -ldflags "-X main.version=$(VERSION) -extldflags -static" ./cmd/$(BINARY).go
 
 docker_build: deps protoc Dockerfile
 	docker buildx build \
